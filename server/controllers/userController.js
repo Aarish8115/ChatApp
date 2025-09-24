@@ -2,6 +2,7 @@ const User = require("../models/User");
 
 async function checkUser(req, res) {
   const { username } = req.user;
+  
 
   const user = await User.findOne({ username });
 
@@ -18,7 +19,7 @@ async function friendsList(req, res) {
   const user = await User.findOne({ username });
 
   if (user) {
-    console.log(user);
+
     res.json({
       error: false,
       friends: user.friends,

@@ -4,7 +4,7 @@ import axiosInstance from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-const UserCard = ({ userId }) => {
+const UserCard = ({ userId, setSelectedUser }) => {
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
   useEffect(() => {
@@ -21,8 +21,10 @@ const UserCard = ({ userId }) => {
 
   return (
     <div
-      onClick={() => navigate(`/chat/${userId}`)}
-      onLoad={() => fetchUserData()}
+      onClick={() => {
+        navigate(`/chat/${userId}`);
+        setSelectedUser(userId);
+      }}
       className="w-full flex gap-4 cursor-pointer items-center hover:bg-white/10 transition-all duration-200 rounded-lg px-2 py-2"
     >
       <div className="rounded-full overflow-hidden border-2 border-white/75">
