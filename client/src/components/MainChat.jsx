@@ -5,8 +5,14 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Chat from "./Chat";
 import axiosInstance from "../utils/axiosInstance";
 import { useState } from "react";
-const MainChat = ({ setShowUserProfile, showUserProfile, selectedUser }) => {
+const MainChat = ({
+  setShowUserProfile,
+  showUserProfile,
+  selectedUser,
+  user,
+}) => {
   const [message, setMessage] = useState("");
+  const [messages, setmessages] = useState([]);
   const chatContainerRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -15,9 +21,32 @@ const MainChat = ({ setShowUserProfile, showUserProfile, selectedUser }) => {
         chatContainerRef.current.scrollHeight;
     }
   };
+
+  const fetchmessages = async () => {
+    try {
+      if (!selectedUser) return;
+
+      console.log("Fetching messages for user:", selectedUser);
+      const response = await axiosInstance.get(`/messages/${selectedUser}`);
+      setmessages(response.data.messages);
+      setTimeout(scrollToBottom, 100);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      setmessages([]);
+    }
+  };
+
   useEffect(() => {
-    scrollToBottom();
+    if (selectedUser) {
+      fetchmessages();
+    }
   }, [selectedUser]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages]);
 
   const handleSendMessage = async (message) => {
     if (!selectedUser) {
@@ -36,8 +65,7 @@ const MainChat = ({ setShowUserProfile, showUserProfile, selectedUser }) => {
       });
       console.log("Message sent:", response.data);
       setMessage("");
-      // Scroll to bottom after sending a message
-      setTimeout(scrollToBottom, 100); // Short timeout to ensure the new message has been rendered
+      fetchmessages();
     } catch (error) {
       console.error("Error sending message:", error);
 
@@ -60,7 +88,7 @@ const MainChat = ({ setShowUserProfile, showUserProfile, selectedUser }) => {
   return (
     <div
       id="mainchat"
-      className={`${showUserProfile ? "w-1/2" : "w-3/4"} flex flex-col`}
+      className={`${showUserProfile ? "w-1/2" : "w-3/4"} flex flex-col h-full`}
     >
       <div className="border-b-2 min-h-[50px] border-white/10 flex w-full justify-between px-4  text-base items-center text-white/75">
         <div
@@ -72,87 +100,53 @@ const MainChat = ({ setShowUserProfile, showUserProfile, selectedUser }) => {
           <div className="rounded-full overflow-hidden border-2 border-white/75">
             <img src={ProfileImage} alt="" className="w-6" />
           </div>
-          <p>{selectedUser ? "User" : "Select a user to start chatting"}</p>
+          <p>
+            {selectedUser
+              ? user
+                ? user.username
+                : "Loading"
+              : "Select a user"}
+          </p>
         </div>
       </div>
-      {selectedUser ? (
-        <>
-          <div
-            ref={chatContainerRef}
-            className="h-[80%] w-full px-4 overflow-scroll object-bottom"
-          >
-            <Chat sendby={"user"}>
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Est
-              dolorum pariatur ut. Molestiae repellat modi consectetur
-              consequuntur totam dolorem assumenda!
+
+      <div className="flex flex-col h-[calc(100%-50px)]">
+        <div
+          ref={chatContainerRef}
+          className="flex-1 w-full px-4 overflow-y-auto"
+        >
+          {messages.map((chat, index) => (
+            <Chat
+              key={index}
+              sendby={chat.senderId == selectedUser ? "user" : "myself"}
+            >
+              {chat.message}
             </Chat>
-            <Chat sendby={"user"}>Lorem ipsum dolor</Chat>
-            <Chat sendby={"myself"}>
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Est
-              dolorum pariatur ut. Molestiae repellat modi consectetur
-              consequuntur totam dolorem assumenda!
-            </Chat>
-            <Chat sendby={"user"}>
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Est
-              dolorum pariatur ut. Molestiae repellat modi consectetur
-              consequuntur totam dolorem assumenda!
-            </Chat>
-            <Chat sendby={"myself"}>
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Est
-              dolorum pariatur ut. Molestiae repellat modi consectetur
-              consequuntur totam dolorem assumenda!
-            </Chat>
-            <Chat sendby={"myself"}>
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Est
-              dolorum pariatur ut. Molestiae repellat modi consectetur
-              consequuntur totam dolorem assumenda!
-            </Chat>
-            <Chat sendby={"user"}>
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Est
-              dolorum pariatur ut. Molestiae repellat modi consectetur
-              consequuntur totam dolorem assumenda!
-            </Chat>
-            <Chat sendby={"myself"}>
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit. Est
-              dolorum pariatur ut. Molestiae repellat modi consectetur
-              consequuntur totam dolorem assumenda!
-            </Chat>
-            <Chat sendby={"myself"}>Lorem ipsum dolor sit, amet consect</Chat>
-            <Chat sendby={"myself"}>Hi</Chat>
-          </div>
-          <div className="w-full flex px-4 py-4 justify-between ">
-            <input
-              type="text"
-              value={message}
-              className="rounded-full bg-white/20 w-[90%] outline-none px-4 py-2 text-sm h-10 "
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  handleSendMessage(message);
-                }
-              }}
-              placeholder="Type a message..."
-            />
-            <div className="w-[5%] mr-4">
-              <button
-                onClick={() => handleSendMessage(message)}
-                className="bg-white h-10 text-2xl w-10 flex items-center justify-center rounded-full text-black"
-              >
-                <LuSendHorizontal />
-              </button>
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="h-[80%] w-full flex items-center justify-center">
-          <div className="text-white/50 text-center">
-            <p className="text-xl">
-              Select a user from the left sidebar to start chatting
-            </p>
-            <p className="mt-2">Your conversations will appear here</p>
+          ))}
+        </div>
+        <div className="w-full flex px-4 py-4 justify-between   ">
+          <input
+            type="text"
+            value={message}
+            className="rounded-full bg-white/20 w-[90%] outline-none px-4 py-2 text-sm h-10 "
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSendMessage(message);
+              }
+            }}
+            placeholder="Type a message..."
+          />
+          <div className="w-[5%] mr-4">
+            <button
+              onClick={() => handleSendMessage(message)}
+              className="bg-white h-10 text-2xl w-10 flex items-center justify-center rounded-full text-black"
+            >
+              <LuSendHorizontal />
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

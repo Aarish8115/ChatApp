@@ -10,7 +10,7 @@ const Login = ({ setLogin }) => {
   const handleLogin = async () => {
     try {
       const response = await axiosInstance.post("/login", {
-        username: email,
+        email: email,
         password: password,
       });
       if (response.data && response.data.accessToken) {

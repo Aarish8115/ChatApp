@@ -1,14 +1,40 @@
 import React from "react";
 import LeftBar from "../components/LeftBar";
 import MainChat from "../components/MainChat";
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import RightBar from "../components/RightBar";
-
+import { useParams } from "react-router-dom";
+import axiosInstance from "../utils/axiosInstance";
 const ChatPage = () => {
   const [showUserProfile, setshowUserProfile] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const [user, setuser] = useState({});
+  const { chatId } = useParams();
+
+  // Set the selectedUser based on chatId when the component mounts or chatId changes
   useEffect(() => {
-    console.log(selectedUser);
+    if (chatId) {
+      setSelectedUser(chatId);
+    }
+  }, [chatId]);
+
+  const fetchUserData = async () => {
+    try {
+      if (!selectedUser) return;
+
+      const response = await axiosInstance.get(`/user/${selectedUser}`);
+      setuser(response.data.user);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  // Fetch user data whenever selectedUser changes
+  useEffect(() => {
+    if (selectedUser) {
+      fetchUserData();
+    }
   }, [selectedUser]);
 
   return (
@@ -19,8 +45,9 @@ const ChatPage = () => {
           selectedUser={selectedUser}
           showUserProfile={showUserProfile}
           setShowUserProfile={setshowUserProfile}
+          user={user}
         />
-        {showUserProfile ? <RightBar /> : ""}
+        {showUserProfile ? <RightBar user={user} /> : ""}
       </div>
     </div>
   );

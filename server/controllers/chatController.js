@@ -56,7 +56,6 @@ async function getMessages(req, res) {
       return res.status(400).json({ message: "Other user ID is required" });
     }
 
-    // Find messages where current user is either sender or receiver
     const messages = await Chat.find({
       $or: [
         { senderId: userId, receiverId: otherUserId },
