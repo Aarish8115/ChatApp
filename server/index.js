@@ -79,9 +79,9 @@ const userRouter = require("./routes/User.router");
 const chatRouter = require("./routes/Chat.router");
 
 // Apply routes
-app.use("/", authRouter);
-app.use("/", userRouter);
-app.use("/", chatRouter);
+app.use(authRouter);
+app.use(userRouter);
+app.use(chatRouter);
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });

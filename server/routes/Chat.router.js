@@ -1,9 +1,11 @@
-const Router = require('express').Router();
+const { Router } = require('express');
 const { sendMessage, getMessages } = require('../controllers/chatController');
 const { authenticateToken } = require('../middlewares/Auth');
-const {friendsList} = require('../controllers/userController');
-Router.post('/messages', authenticateToken, sendMessage);
-Router.get('/messages/:userId', authenticateToken, getMessages);
-Router.get('/friends', authenticateToken, friendsList);
+const { friendsList } = require('../controllers/userController');
 
-module.exports = Router;
+const router = Router();
+router.post('/messages', authenticateToken, sendMessage);
+router.get('/messages/:userId', authenticateToken, getMessages);
+router.get('/friends', authenticateToken, friendsList);
+
+module.exports = router;
