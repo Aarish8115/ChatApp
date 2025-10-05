@@ -12,7 +12,8 @@ const io = new Server(server, {
   cors: {
     origin: [
       "https://chatapp-frontend-l2g9.onrender.com",
-      "http://localhost:5173", // For local development
+      "http://localhost:5173",
+      "https://chatapp-backend-e8b7.onrender.com",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -42,7 +43,8 @@ app.use(
   cors({
     origin: [
       "https://chatapp-frontend-l2g9.onrender.com",
-      "http://localhost:5173", // For local development
+      "http://localhost:5173",
+      "https://chatapp-backend-e8b7.onrender.com",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -56,9 +58,20 @@ app.options("*", cors());
 // Add security headers middleware
 app.use((req, res, next) => {
   // Instead of using res.header, use res.setHeader for Express 5 compatibility
-  if (req.headers.origin) {
-    res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
+  const allowedOrigins = [
+    "https://chatapp-frontend-l2g9.onrender.com",
+    "http://localhost:5173",
+    "https://chatapp-backend-e8b7.onrender.com",
+  ];
+
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    // For requests without origin header or from unknown origins
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
   }
+
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader(
     "Access-Control-Allow-Methods",

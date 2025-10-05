@@ -18,8 +18,12 @@ const Login = ({ setLogin }) => {
         navigate("/home");
       }
     } catch (error) {
-      if (error.response.data && error.response.data.message) {
+      console.error("Login error:", error);
+
+      if (error.response?.data?.message) {
         console.log(error.response.data.message);
+      } else {
+        console.log("An error occurred during login. Please try again.");
       }
     }
   };
