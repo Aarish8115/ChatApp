@@ -22,7 +22,7 @@ export const SocketProvider = ({ children }) => {
           const userId = response.data.user.userId;
           setUserId(userId);
 
-          const newSocket = io(constants.API_URL || "http://localhost:3000");
+          const newSocket = io(constants.API_URL || "error");
           setSocket(newSocket);
 
           newSocket.emit("user_connected", userId);
