@@ -5,6 +5,7 @@ import { LuSendHorizontal } from "react-icons/lu";
 import Chat from "./Chat";
 import axiosInstance from "../utils/axiosInstance";
 import { useState } from "react";
+import { useSocket } from "../utils/SocketContext";
 const MainChat = ({
   setShowUserProfile,
   showUserProfile,
@@ -14,6 +15,7 @@ const MainChat = ({
   const [message, setMessage] = useState("");
   const [messages, setmessages] = useState([]);
   const chatContainerRef = useRef(null);
+  const { socket, userId } = useSocket();
 
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
@@ -48,6 +50,31 @@ const MainChat = ({
     }
   }, [messages]);
 
+  useEffect(() => {
+    if (!socket || !selectedUser) return;
+
+    const handleReceiveMessage = (data) => {
+      console.log("Received message via socket:", data);
+
+      if (data.senderId === selectedUser) {
+        const newMessage = {
+          chatId: data.chatId,
+          senderId: data.senderId,
+          message: data.message,
+          timestamp: data.timestamp,
+        };
+
+        setmessages((prevMessages) => [...prevMessages, newMessage]);
+      }
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+    };
+  }, [socket, selectedUser]);
+
   const handleSendMessage = async (message) => {
     if (!selectedUser) {
       alert("Please select a user to chat with first!");
@@ -65,7 +92,19 @@ const MainChat = ({
       });
       console.log("Message sent:", response.data);
       setMessage("");
-      fetchmessages();
+
+      const sentMessage = response.data.chat;
+
+      setmessages((prevMessages) => [...prevMessages, sentMessage]);
+      if (socket) {
+        socket.emit("send_message", {
+          senderId: sentMessage.senderId,
+          receiverId: selectedUser,
+          message: sentMessage.message,
+          chatId: sentMessage.chatId,
+          timestamp: sentMessage.timestamp,
+        });
+      }
     } catch (error) {
       console.error("Error sending message:", error);
 

@@ -4,7 +4,6 @@ async function sendMessage(req, res) {
   try {
     const { username } = req.user;
 
-    // Find the user to get their userId
     const user = await User.findOne({ username });
 
     if (!user) {
@@ -18,19 +17,30 @@ async function sendMessage(req, res) {
       return res.status(400).json({ message: "Receiver ID is required" });
     }
 
-    // Check if receiver exists
     const receiver = await User.findOne({ userId: receiverId });
     if (!receiver) {
       return res.status(404).json({ message: "Receiver user not found" });
     }
 
+    const chatId = `${userId}-${receiverId}-${Date.now()}`;
     const chat = new Chat({
-      chatId: `${userId}-${receiverId}-${Date.now()}`,
+      chatId,
       senderId: userId,
       receiverId,
       message,
     });
     await chat.save();
+
+    const socketManager = require("../utils/socketManager");
+    const io = socketManager.getIO();
+    io.emit("send_message", {
+      senderId: userId,
+      receiverId,
+      message,
+      chatId,
+      timestamp: new Date(),
+    });
+
     res.status(200).json({ message: "Message sent successfully", chat });
   } catch (error) {
     console.error("Error in sendMessage:", error);
