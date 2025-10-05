@@ -25,11 +25,18 @@ mongoose
 const cors = require("cors");
 
 // Configure CORS with explicit settings and handle preflight
+const defaultOrigins = [
+  "http://localhost:5173",
+  "https://chatapp-frontend-l2g9.onrender.com",
+];
+const envOrigins = (process.env.FRONTEND_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
+
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://chatapp-frontend-l2g9.onrender.com",
-  ], // Allow both local dev and deployed frontend
+  origin: allowedOrigins, // Allow both local dev, deployed frontend, and any provided via env
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   // Do not hardcode allowedHeaders so preflight can echo request headers
   credentials: true,
@@ -64,7 +71,5 @@ app.get("/health", (req, res) => {
 
 app.listen(port, () => {
   console.log(`Chat App server running on port ${port}`);
-  console.log(
-    `CORS enabled for origins: http://localhost:5173, https://chatapp-frontend-l2g9.onrender.com`
-  );
+  console.log(`CORS enabled for origins: ${allowedOrigins.join(", ")}`);
 });

@@ -1,8 +1,9 @@
 import axios from "axios";
 import { BASE_URL } from "./constants";
 
+const apiBaseUrl = import.meta.env?.VITE_API_URL || BASE_URL;
 const axiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: apiBaseUrl,
   timeout: 30000, // Increased timeout to 30 seconds to account for cold starts
   headers: {
     "Content-Type": "application/json",
@@ -15,8 +16,13 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem("token");
-    if (accessToken) {
+    const path = (config.url || "").toString();
+    // Skip Authorization for auth endpoints
+    const isAuthEndpoint = /\/login$|\/register$/.test(path);
+    if (accessToken && !isAuthEndpoint) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+    } else if (isAuthEndpoint) {
+      delete config.headers.Authorization;
     }
     console.log(`Making ${config.method} request to ${config.url}`);
     return config;
