@@ -10,8 +10,13 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
+    origin: [
+      "https://chatapp-frontend-l2g9.onrender.com",
+      "http://localhost:5173", // For local development
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   },
 });
 
@@ -31,7 +36,23 @@ mongoose
   });
 
 const cors = require("cors");
-app.use(cors({ origin: "*" }));
+
+// CORS configuration middleware
+app.use(
+  cors({
+    origin: [
+      "https://chatapp-frontend-l2g9.onrender.com",
+      "http://localhost:5173", // For local development
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+// Pre-flight requests handling
+app.options("*", cors());
+
 
 app.use(express.json());
 
