@@ -41,46 +41,42 @@ const cors = require("cors");
 // CORS configuration middleware
 app.use(
   cors({
-    origin: [
-      "https://chatapp-frontend-l2g9.onrender.com",
-      "http://localhost:5173",
-      "https://chatapp-backend-e8b7.onrender.com",
-    ],
+    origin: function (origin, callback) {
+      const allowedOrigins = [
+        "https://chatapp-frontend-l2g9.onrender.com",
+        "http://localhost:5173",
+        "https://chatapp-backend-e8b7.onrender.com",
+      ];
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.log("Blocked by CORS: ", origin);
+        callback(null, false);
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
 
-// Pre-flight requests handling
+// Pre-flight requests handling for all routes
 app.options("*", cors());
 
 // Add security headers middleware
 app.use((req, res, next) => {
-  // Instead of using res.header, use res.setHeader for Express 5 compatibility
-  const allowedOrigins = [
-    "https://chatapp-frontend-l2g9.onrender.com",
-    "http://localhost:5173",
-    "https://chatapp-backend-e8b7.onrender.com",
-  ];
-
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  } else {
-    // For requests without origin header or from unknown origins
-    res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-  }
-
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+  // Add security headers
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains"
   );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
+
+  // Let the CORS middleware handle the CORS headers
+  // This ensures we don't have conflicting CORS policies
   next();
 });
 
@@ -97,6 +93,27 @@ app.use(userRouter);
 app.use(chatRouter);
 app.get("/", (req, res) => {
   res.send("Hello World!");
+});
+
+// CORS test endpoint
+app.get("/api/cors-test", (req, res) => {
+  res.json({
+    message: "CORS is working properly",
+    origin: req.headers.origin || "No origin header found",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  res.status(statusCode).json({
+    status: "error",
+    statusCode,
+    message,
+  });
 });
 
 const activeUsers = new Map();
