@@ -64,23 +64,26 @@ async function login(req, res) {
   }
   const user = await User.findOne({ email });
 
-  if (email == user.email) {
-    bcrypt.compare(password, user.password, function (err, result) {
-      if (result) {
-        const accessToken = jwt.sign(
-          { _id: user._id, email: user.email, username: user.username },
-          process.env.ACCESS_TOKEN,
-          { expiresIn: "2d" }
-        );
-        return res.json({
-          error: false,
-          user,
-          accessToken,
-          message: "Login successful",
-        });
-      } else return res.status(400).json({ error: true, message: "Wrong password" });
-    });
-  } else
-    return res.status(400).json({ error: true, message: "Wrong password" });
+  // Check if user exists
+  if (!user) {
+    return res.status(400).json({ error: true, message: "User not found" });
+  }
+
+  // Compare passwords
+  bcrypt.compare(password, user.password, function (err, result) {
+    if (result) {
+      const accessToken = jwt.sign(
+        { _id: user._id, email: user.email, username: user.username },
+        process.env.ACCESS_TOKEN,
+        { expiresIn: "2d" }
+      );
+      return res.json({
+        error: false,
+        user,
+        accessToken,
+        message: "Login successful",
+      });
+    } else return res.status(400).json({ error: true, message: "Wrong password" });
+  });
 }
 module.exports = { register, login };

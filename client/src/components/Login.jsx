@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
+import { BASE_URL } from "../utils/constants";
 
 import { useNavigate } from "react-router-dom";
 
@@ -7,24 +8,47 @@ const Login = ({ setLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [loginError, setLoginError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState("");
+  
   const handleLogin = async () => {
+    setLoginError("");
+    setDebugInfo("");
+    setIsLoading(true);
     try {
+      console.log("Attempting login to:", BASE_URL);
       const response = await axiosInstance.post("/login", {
         email: email,
         password: password,
       });
+      console.log("Login response:", response);
+      
       if (response.data && response.data.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
         navigate("/home");
       }
     } catch (error) {
       console.error("Login error:", error);
+      
+      // Detailed debug information
+      let errorDetails = "";
+      if (error.code) errorDetails += `Code: ${error.code}. `;
+      if (error.message) errorDetails += `Message: ${error.message}. `;
+      if (error.response?.status) errorDetails += `Status: ${error.response.status}. `;
+      setDebugInfo(errorDetails);
 
-      if (error.response?.data?.message) {
-        console.log(error.response.data.message);
+      if (error.code === "ERR_NETWORK") {
+        setLoginError("Network error. The server might be down or CORS might be blocking the request.");
+      } else if (error.code === "ECONNABORTED") {
+        setLoginError("Connection timed out. The server might be starting up, please try again.");
+      } else if (error.response?.data?.message) {
+        setLoginError(error.response.data.message);
       } else {
-        console.log("An error occurred during login. Please try again.");
+        setLoginError("An error occurred during login. Please try again.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,11 +92,20 @@ const Login = ({ setLogin }) => {
           />
         </div>
       </div>
+      {loginError && (
+        <p className="text-red-400 text-sm">{loginError}</p>
+      )}
+      {debugInfo && (
+        <p className="text-yellow-400 text-xs mt-1 max-w-xs overflow-hidden">{debugInfo}</p>
+      )}
       <button
         onClick={handleLogin}
-        className="bg-purple-500 cursor-pointer hover:bg-purple-400 active:bg-violet-500 transition-colors duration-200 text-white px-4 py-2 rounded-sm w-fit"
+        disabled={isLoading}
+        className={`${
+          isLoading ? "bg-purple-700" : "bg-purple-500 hover:bg-purple-400 active:bg-violet-500"
+        } cursor-pointer transition-colors duration-200 text-white px-4 py-2 rounded-sm w-fit`}
       >
-        Login
+        {isLoading ? "Logging in..." : "Login"}
       </button>
       <div className="flex gap-2 text-xs text-white">
         New User ?
