@@ -4,10 +4,9 @@ import { BASE_URL } from "./constants";
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   timeout: 30000, // Increased timeout to 30 seconds to account for cold starts
-  headers: { 
+  headers: {
     "Content-Type": "application/json",
-    // Adding explicit CORS headers that might help during development
-    "Access-Control-Allow-Origin": "*",
+    // Do not set CORS response headers on requests
   },
   withCredentials: false, // Changed to false as it can cause issues with CORS
 });
@@ -36,8 +35,10 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     console.error("Response error:", error);
-    if (error.code === 'ERR_NETWORK') {
-      console.log("Network error - Check if the server is running and CORS is configured correctly");
+    if (error.code === "ERR_NETWORK") {
+      console.log(
+        "Network error - Check if the server is running and CORS is configured correctly"
+      );
     }
     return Promise.reject(error);
   }

@@ -11,37 +11,52 @@ const Login = ({ setLogin }) => {
   const [loginError, setLoginError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [debugInfo, setDebugInfo] = useState("");
-  
+
   const handleLogin = async () => {
     setLoginError("");
     setDebugInfo("");
+    // Basic client validation
+    const cleanEmail = (email || "").trim().toLowerCase();
+    const cleanPassword = password || "";
+    if (!cleanEmail || !cleanPassword) {
+      setLoginError("Email and password are required");
+      return;
+    }
+
     setIsLoading(true);
     try {
       console.log("Attempting login to:", BASE_URL);
       const response = await axiosInstance.post("/login", {
-        email: email,
-        password: password,
+        email: cleanEmail,
+        password: cleanPassword,
       });
       console.log("Login response:", response);
-      
+
       if (response.data && response.data.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
         navigate("/home");
       }
     } catch (error) {
       console.error("Login error:", error);
-      
+
       // Detailed debug information
       let errorDetails = "";
       if (error.code) errorDetails += `Code: ${error.code}. `;
       if (error.message) errorDetails += `Message: ${error.message}. `;
-      if (error.response?.status) errorDetails += `Status: ${error.response.status}. `;
+      if (error.response?.status)
+        errorDetails += `Status: ${error.response.status}. `;
+      if (error.response?.data?.message)
+        errorDetails += `Server: ${error.response.data.message}. `;
       setDebugInfo(errorDetails);
 
       if (error.code === "ERR_NETWORK") {
-        setLoginError("Network error. The server might be down or CORS might be blocking the request.");
+        setLoginError(
+          "Network error. The server might be down or CORS might be blocking the request."
+        );
       } else if (error.code === "ECONNABORTED") {
-        setLoginError("Connection timed out. The server might be starting up, please try again.");
+        setLoginError(
+          "Connection timed out. The server might be starting up, please try again."
+        );
       } else if (error.response?.data?.message) {
         setLoginError(error.response.data.message);
       } else {
@@ -92,17 +107,19 @@ const Login = ({ setLogin }) => {
           />
         </div>
       </div>
-      {loginError && (
-        <p className="text-red-400 text-sm">{loginError}</p>
-      )}
+      {loginError && <p className="text-red-400 text-sm">{loginError}</p>}
       {debugInfo && (
-        <p className="text-yellow-400 text-xs mt-1 max-w-xs overflow-hidden">{debugInfo}</p>
+        <p className="text-yellow-400 text-xs mt-1 max-w-xs overflow-hidden">
+          {debugInfo}
+        </p>
       )}
       <button
         onClick={handleLogin}
         disabled={isLoading}
         className={`${
-          isLoading ? "bg-purple-700" : "bg-purple-500 hover:bg-purple-400 active:bg-violet-500"
+          isLoading
+            ? "bg-purple-700"
+            : "bg-purple-500 hover:bg-purple-400 active:bg-violet-500"
         } cursor-pointer transition-colors duration-200 text-white px-4 py-2 rounded-sm w-fit`}
       >
         {isLoading ? "Logging in..." : "Login"}

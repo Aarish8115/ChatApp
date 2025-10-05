@@ -24,15 +24,20 @@ mongoose
 
 const cors = require("cors");
 
-// Configure CORS with more explicit settings
-app.use(cors({
-  origin: ["http://localhost:5173", "https://chatapp-frontend-l2g9.onrender.com"], // Allow both local dev and deployed frontend
+// Configure CORS with explicit settings and handle preflight
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "https://chatapp-frontend-l2g9.onrender.com",
+  ], // Allow both local dev and deployed frontend
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  // Do not hardcode allowedHeaders so preflight can echo request headers
   credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 204
-}));
+  optionsSuccessStatus: 204,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Request body parser middleware
 app.use(express.json());
@@ -50,14 +55,16 @@ app.get("/", (req, res) => {
 
 // Health check endpoint that doesn't require auth
 app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "UP", 
+  res.status(200).json({
+    status: "UP",
     timestamp: new Date().toISOString(),
-    message: "Server is running properly"
+    message: "Server is running properly",
   });
 });
 
 app.listen(port, () => {
   console.log(`Chat App server running on port ${port}`);
-  console.log(`CORS enabled for origins: http://localhost:5173, https://chatapp-frontend-l2g9.onrender.com`);
+  console.log(
+    `CORS enabled for origins: http://localhost:5173, https://chatapp-frontend-l2g9.onrender.com`
+  );
 });

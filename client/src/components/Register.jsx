@@ -12,11 +12,12 @@ const Register = ({ setLogin }) => {
 
   const handleRegister = async () => {
     try {
-      const response = await axiosInstance.post("/register", {
-        username: name,
-        email: email,
-        password: password,
-      });
+      const payload = {
+        username: (name || "").trim().toLowerCase(),
+        email: (email || "").trim().toLowerCase(),
+        password: password || "",
+      };
+      const response = await axiosInstance.post("/register", payload);
       if (response.data && response.data.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
         navigate("/home");

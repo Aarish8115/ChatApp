@@ -3,7 +3,12 @@ const User = require("../models/User");
 const { generateId } = require("../utils/generateId");
 const bcrypt = require("bcrypt");
 async function register(req, res) {
-  const { username, email, password } = req.body;
+  let { username, email, password } = req.body || {};
+  // Normalize inputs
+  username = typeof username === "string" ? username.trim().toLowerCase() : "";
+  email = typeof email === "string" ? email.trim().toLowerCase() : "";
+  password = typeof password === "string" ? password : "";
+
   if (!username) {
     return res
       .status(400)
@@ -18,13 +23,13 @@ async function register(req, res) {
       .json({ error: true, message: "Password is required" });
   }
 
-  const isUser = await User.findOne({ email: email });
+  const isUser = await User.findOne({ email });
   if (isUser) {
     return res
       .status(400)
       .json({ error: true, message: "User already exists" });
   }
-  const isUsername = await User.findOne({ username: username });
+  const isUsername = await User.findOne({ username });
   if (isUsername) {
     return res
       .status(400)
@@ -53,7 +58,11 @@ async function register(req, res) {
   });
 }
 async function login(req, res) {
-  const { email, password } = req.body;
+  let { email, password } = req.body || {};
+  // Normalize inputs
+  email = typeof email === "string" ? email.trim().toLowerCase() : "";
+  password = typeof password === "string" ? password : "";
+
   if (!email) {
     return res.status(400).json({ error: true, message: "email is required" });
   }
@@ -71,6 +80,11 @@ async function login(req, res) {
 
   // Compare passwords
   bcrypt.compare(password, user.password, function (err, result) {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: true, message: "Internal server error" });
+    }
     if (result) {
       const accessToken = jwt.sign(
         { _id: user._id, email: user.email, username: user.username },
