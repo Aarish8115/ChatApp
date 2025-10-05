@@ -53,16 +53,35 @@ app.use(
 // Pre-flight requests handling
 app.options("*", cors());
 
+// Add security headers middleware
+app.use((req, res, next) => {
+  // Instead of using res.header, use res.setHeader for Express 5 compatibility
+  if (req.headers.origin) {
+    res.setHeader("Access-Control-Allow-Origin", req.headers.origin);
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+  );
+  next();
+});
 
 app.use(express.json());
 
-const auth = require("./routes/Auth.router");
-const checkUser = require("./routes/User.router");
-const chat = require("./routes/Chat.router");
+// Import routes
+const authRouter = require("./routes/Auth.router");
+const userRouter = require("./routes/User.router");
+const chatRouter = require("./routes/Chat.router");
 
-app.use(auth);
-app.use(checkUser);
-app.use(chat);
+// Apply routes
+app.use("/", authRouter);
+app.use("/", userRouter);
+app.use("/", chatRouter);
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
