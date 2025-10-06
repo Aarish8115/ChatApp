@@ -9,23 +9,20 @@ import {
   ProfilePage,
   ChatPage,
 } from "./pages";
-import { SocketProvider } from "./utils/SocketContext";
 const App = () => {
   return (
     <div className="relative h-screen w-full select-none">
       <Background />
 
-      <SocketProvider>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route element={<PrivateRoute />}>
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/chat/:chatId" element={<ChatPage />} />
-          </Route>
-        </Routes>
-      </SocketProvider>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route element={<PrivateRoute />}>
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/chat/:chatId" element={<ChatPage />} />
+        </Route>
+      </Routes>
     </div>
   );
 };

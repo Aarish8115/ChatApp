@@ -7,9 +7,8 @@ const axiosInstance = axios.create({
   timeout: 30000, // Increased timeout to 30 seconds to account for cold starts
   headers: {
     "Content-Type": "application/json",
-    // Do not set CORS response headers on requests
   },
-  withCredentials: false, // Changed to false as it can cause issues with CORS
+  withCredentials: false, 
 });
 
 // Request interceptor

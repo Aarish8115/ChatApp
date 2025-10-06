@@ -15,14 +15,20 @@ export const SocketProvider = ({ children }) => {
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   useEffect(() => {
+    let createdSocket = null;
     const fetchCurrentUser = async () => {
       try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          return;
+        }
         const response = await axiosInstance.get("/me");
         if (response.data && response.data.user) {
           const userId = response.data.user.userId;
           setUserId(userId);
 
           const newSocket = io(constants.API_URL || "error");
+          createdSocket = newSocket;
           setSocket(newSocket);
 
           newSocket.emit("user_connected", userId);
@@ -30,16 +36,16 @@ export const SocketProvider = ({ children }) => {
           newSocket.on("user_status_changed", (activeUsers) => {
             setOnlineUsers(activeUsers);
           });
-          return () => {
-            newSocket.disconnect();
-          };
         }
-      } catch (error) {
-        console.error("Error fetching current user:", error);
-      }
+      } catch (error) {}
     };
 
     fetchCurrentUser();
+    return () => {
+      if (createdSocket) {
+        createdSocket.disconnect();
+      }
+    };
   }, []);
 
   const value = {
